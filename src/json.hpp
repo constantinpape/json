@@ -58,15 +58,15 @@ SOFTWARE.
 #include <vector> // vector
 
 // exclude unsupported compilers
-#if defined(__clang__)
-    #if (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__) < 30400
-        #error "unsupported Clang version - see https://github.com/nlohmann/json#supported-compilers"
-    #endif
-#elif defined(__GNUC__)
-    #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40900
-        #error "unsupported GCC version - see https://github.com/nlohmann/json#supported-compilers"
-    #endif
-#endif
+//#if defined(__clang__)
+//    #if (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__) < 30400
+//        #error "unsupported Clang version - see https://github.com/nlohmann/json#supported-compilers"
+//    #endif
+//#elif defined(__GNUC__)
+//    #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40900
+//        #error "unsupported GCC version - see https://github.com/nlohmann/json#supported-compilers"
+//    #endif
+//#endif
 
 // disable float-equal warnings on GCC/clang
 #if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
@@ -5550,6 +5550,16 @@ class basic_json
 
             // insert to array and return iterator
             iterator result(this);
+    
+            // FIX GCC 4.8
+            #if defined(__GNUC__) && __GNUC__ <= 4 && __GNUC_MINOR__ <= 8
+                 auto insert_pos = std::distance(m_value.array->begin(), pos.m_it.array_iterator);
+                 m_value.array->insert(pos.m_it.array_iterator, cnt, val);
+                 result.m_it.array_iterator = m_value.array->begin() + insert_pos;
+            #else
+                result.m_it.array_iterator = m_value.array->insert(pos.m_it.array_iterator, cnt, val);
+            #endif
+
             result.m_it.array_iterator = m_value.array->insert(pos.m_it.array_iterator, val);
             return result;
         }
